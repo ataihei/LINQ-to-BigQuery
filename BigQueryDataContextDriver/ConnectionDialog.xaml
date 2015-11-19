@@ -7,9 +7,27 @@
         ResizeMode="NoResize"
         Background="{DynamicResource {x:Static SystemColors.ControlBrushKey}}"
         Height="250" Width="450">
-    <StackPanel Orientation="Vertical" Margin="10">
-        <Label Content="Json Authentication Key:" HorizontalAlignment="Left" VerticalAlignment="Center" />
-        <TextBox x:Name="JsonTextBox" TextWrapping="NoWrap"  VerticalAlignment="Center"  HorizontalAlignment="Stretch" />
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibility" />
+    </Window.Resources>
+    <StackPanel Orientation="Vertical" Margin="10"><Label Content="Select Authentication Type:"></Label>
+        <StackPanel Orientation="Horizontal" x:Name="SelectAuthenticationTypeRadioButtons">
+            <RadioButton x:Name="AuthTypeJsonRadioButton" GroupName="AuthenticationType" IsChecked="True" Margin="0, 0, 5, 0"><TextBlock>Json</TextBlock></RadioButton>
+            <RadioButton x:Name="AuthTypeP12RadioButton" GroupName="AuthenticationType"><TextBlock>P12</TextBlock></RadioButton>
+        </StackPanel>
+        <StackPanel Name="RequiredForJson" Visibility="{Binding IsChecked, ElementName=AuthTypeJsonRadioButton, Converter={StaticResource BooleanToVisibility}}">
+            <Label Content="Json Authentication Key:" HorizontalAlignment="Left" VerticalAlignment="Center" />
+            <TextBox x:Name="JsonTextBox" TextWrapping="NoWrap"  VerticalAlignment="Center"  HorizontalAlignment="Stretch" />
+        </StackPanel>
+        <StackPanel Name="RequiredForP12" Visibility="{Binding IsChecked, ElementName=AuthTypeP12RadioButton, Converter={StaticResource BooleanToVisibility}}">
+            <Label Content="P12 Authentication Key File:" HorizontalAlignment="Left" VerticalAlignment="Center" />
+            <DockPanel LastChildFill="True">
+                <Button Click="P12FileSelectButton_OnClick" DockPanel.Dock="Right"><TextBlock Padding="3,0,3,0">Browse</TextBlock></Button>
+                <TextBox x:Name="P12FilePathTextBox" DockPanel.Dock="Left" />
+            </DockPanel>
+            <Label>Password:</Label>
+            <TextBox x:Name="P12PasswordTextBox" />
+        </StackPanel>
 
         <Label Content="User:" HorizontalAlignment="Left" VerticalAlignment="Center" />
         <TextBox x:Name="UserTextBox" TextWrapping="NoWrap" VerticalAlignment="Center" HorizontalAlignment="Stretch" />

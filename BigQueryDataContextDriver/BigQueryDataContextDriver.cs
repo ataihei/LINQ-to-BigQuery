@@ -7,6 +7,7 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.Remoting;
 using Google.Apis.Bigquery.v2;
+using Google.Apis.Http;
 using LINQPad.Extensibility.DataContext;
 using Newtonsoft.Json;
 
@@ -63,7 +64,7 @@ namespace BigQuery.Linq
         {
             var property = new DriverProperty(cxInfo);
 
-            var context = ContextHelper.GetContext(property.ContextJsonAuthenticationKey, property.ContextUser, property.ContextProjectId);
+            var context = GetContext(property);
 
             SchemaBuilder schemaBuilder = null;
 
@@ -102,29 +103,78 @@ namespace BigQuery.Linq
             return list;
         }
 
+        private BigQueryContext GetContext(DriverProperty property)
+        {
+            var credential = CreateCredential(property);
+
+            return ContextHelper.GetContext(credential, property.ContextProjectId);
+        }
+
+        private IConfigurableHttpClientInitializer CreateCredential(DriverProperty property)
+        {
+            switch (property.AuthenticationType)
+            {
+                case GoogleApiAuthenticationType.Json:
+                    return ContextHelper.CreateCredential(property.ContextJsonAuthenticationKey, property.ContextUser, property.ContextProjectId);
+                case GoogleApiAuthenticationType.P12:
+                    return ContextHelper.CreateCredential(property.ContextP12BinaryData, property.ContextP12Password, property.ContextUser, property.ContextProjectId);
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+        }
+
         // 4,5...
 
         public override ParameterDescriptor[] GetContextConstructorParameters(IConnectionInfo cxInfo)
         {
             // With Embedded CustomBigQueryContext
-            return new[]
+            var property = new DriverProperty(cxInfo);
+            switch (property.AuthenticationType)
             {
-                new ParameterDescriptor("json", typeof(string).FullName),
-                new ParameterDescriptor("user", typeof(string).FullName),
-                new ParameterDescriptor("projectId", typeof(string).FullName)
-            };
+                case GoogleApiAuthenticationType.Json:
+                    return new[]
+                    {
+                        new ParameterDescriptor("json", typeof(string).FullName),
+                        new ParameterDescriptor("user", typeof(string).FullName),
+                        new ParameterDescriptor("projectId", typeof(string).FullName)
+                    };
+                case GoogleApiAuthenticationType.P12:
+                    return new[]
+                    {
+                        new ParameterDescriptor("p12BinaryData", typeof(byte[]).FullName),
+                        new ParameterDescriptor("password", typeof(string).FullName),
+                        new ParameterDescriptor("user", typeof(string).FullName),
+                        new ParameterDescriptor("projectId", typeof(string).FullName)
+                    };
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
         }
 
         public override object[] GetContextConstructorArguments(IConnectionInfo cxInfo)
         {
             var property = new DriverProperty(cxInfo);
 
-            return new object[]
+            switch (property.AuthenticationType)
             {
-                property.ContextJsonAuthenticationKey,
-                property.ContextUser,
-                property.ContextProjectId
-            };
+                case GoogleApiAuthenticationType.Json:
+                    return new object[]
+                    {
+                        property.ContextJsonAuthenticationKey,
+                        property.ContextUser,
+                        property.ContextProjectId
+                    };
+                case GoogleApiAuthenticationType.P12:
+                    return new object[]
+                    {
+                        property.ContextP12BinaryData,
+                        property.ContextP12Password,
+                        property.ContextUser,
+                        property.ContextProjectId
+                    };
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
         }
 
         public override IEnumerable<string> GetNamespacesToAdd(IConnectionInfo cxInfo)

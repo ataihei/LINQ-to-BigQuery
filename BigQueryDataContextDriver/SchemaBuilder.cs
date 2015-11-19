@@ -80,16 +80,17 @@ namespace BigQuery.Linq
             code.AppendLine("using System.Linq;");
             code.AppendLine("using System.Collections;");
             code.AppendLine("using System.Collections.Generic;");
-            code.AppendLine("using System.Windows.Forms.DataVisualization.Charting;");
+            code.AppendLine("using System.Security.Cryptography.X509Certificates;");
             code.AppendLine("using System.Threading;");
+            code.AppendLine("using System.Windows.Forms.DataVisualization.Charting;");
             code.AppendLine("using Google.Apis.Auth.OAuth2;");
             code.AppendLine("using Google.Apis.Bigquery.v2;");
+            code.AppendLine("using Google.Apis.Http;");
             code.AppendLine("using Google.Apis.Services;");
             code.AppendLine("using Google.Apis.Util.Store;");
             code.AppendLine("using BigQuery.Linq;");
 
             code.Append(BuildCustomContext(namespaceName));
-
 
             foreach (var schema in Schemas.Where(x => x.GroupedMetaTableSchemas.Any()))
             {
@@ -163,27 +164,52 @@ namespace {namespaceName}
 {{
     public class CustomBigQueryContext : BigQueryContext
     {{
+        private CustomBigQueryContext(IConfigurableHttpClientInitializer credential, string projectId)
+        {{
+            this.BigQueryService = GetBigqueryService(credential, projectId);
+            this.ProjectId = projectId;
+            this.TimeoutMs = (long)TimeSpan.FromMinutes(3).TotalMilliseconds;
+        }}
+
         public CustomBigQueryContext(string json, string user, string projectId)
+            : this(CreateCredential(json, user, projectId), projectId)
+        {{
+        }}
+
+        public CustomBigQueryContext(byte[] p12BinaryData, string password, string user, string projectId)
+            : this(CreateCredential(p12BinaryData, password, user, projectId), projectId)
+        {{
+        }}
+
+        private static BigqueryService GetBigqueryService(IConfigurableHttpClientInitializer credential, string projectId)
+        {{
+            return new BigqueryService(new BaseClientService.Initializer
+            {{
+                ApplicationName = ""LINQ to BigQuery"",
+                HttpClientInitializer = credential
+            }});
+        }}
+
+        private static IConfigurableHttpClientInitializer CreateCredential(string json, string user, string projectId)
         {{
             using (var ms = new MemoryStream(Encoding.UTF8.GetBytes(json)))
             {{
-                var userCredential = GoogleWebAuthorizationBroker.AuthorizeAsync(ms,
+                // Open Browser, Accept Auth
+                return GoogleWebAuthorizationBroker.AuthorizeAsync(ms,
                     new[] {{ BigqueryService.Scope.Bigquery }},
                     user,
                     CancellationToken.None, new FileDataStore(""LINQ-to-BigQuery-for-"" + projectId))
                     .GetAwaiter().GetResult();
-
-                var bigquery = new BigqueryService(new BaseClientService.Initializer
-                {{
-                    ApplicationName = ""LINQ to BigQuery"",
-                    HttpClientInitializer = userCredential
-                }});
-
-                this.BigQueryService = bigquery;
-                this.ProjectId = projectId;
             }}
+        }}
 
-            this.TimeoutMs = (long)TimeSpan.FromMinutes(3).TotalMilliseconds;
+        private static IConfigurableHttpClientInitializer CreateCredential(byte[] p12BinaryData, string password, string user, string projectId)
+        {{
+            return new ServiceAccountCredential(
+                new ServiceAccountCredential.Initializer(user)
+                {{
+                    Scopes = new [] {{ BigqueryService.Scope.Bigquery }}
+                }}.FromCertificate(new X509Certificate2(p12BinaryData, password, X509KeyStorageFlags.Exportable)));
         }}
     }}
 }}

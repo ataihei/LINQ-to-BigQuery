@@ -74,6 +74,36 @@ namespace BigQuery.Linq
             set { WithEncrypt(nameof(ContextDataSet), value); }
         }
 
+        public byte[] ContextP12BinaryData
+        {
+            get
+            {
+                return Convert.FromBase64String(WithDecrypt(nameof(ContextP12BinaryData)));
+            }
+            set
+            {
+                WithEncrypt(nameof(ContextP12BinaryData), Convert.ToBase64String(value));
+            }
+        }
+
+        public string ContextP12Password
+        {
+            get { return WithDecrypt(nameof(ContextP12Password)); }
+            set { WithEncrypt(nameof(ContextP12Password), value); }
+        }
+
+        public GoogleApiAuthenticationType AuthenticationType
+        {
+            get
+            {
+                return (GoogleApiAuthenticationType)Enum.Parse(typeof(GoogleApiAuthenticationType), WithDecrypt(nameof(AuthenticationType)));
+            }
+            set
+            {
+                WithEncrypt(nameof(AuthenticationType), value.ToString());
+            }
+        }
+
         public string[] NamespacesToAdd
         {
             get
@@ -126,5 +156,11 @@ namespace BigQuery.Linq
         //    }
         //    return false;
         //}
+    }
+
+    public enum GoogleApiAuthenticationType
+    {
+        Json,
+        P12
     }
 }
