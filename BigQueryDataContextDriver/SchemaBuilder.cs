@@ -210,7 +210,16 @@ namespace {namespaceName}
 	    public static T[] DumpToExcel<T>(this IExecutableBigQueryable<T> querySource)
 	    {{
             var source = DumpRunToArray(querySource);
+            return source.DumpToExcel();
+        }}
 
+	    public static T[] DumpToExcel<T>(this IEnumerable<T> source)
+	    {{
+            return source.ToArray().DumpToExcel();
+        }}
+
+	    public static T[] DumpToExcel<T>(this T[] source)
+	    {{
             var fileName = System.IO.Path.Combine(System.IO.Path.GetTempPath(), ""LINQtoBigQueryLINQPadDriver"", System.IO.Path.GetTempFileName() + "".csv"");
             LINQPad.Util.WriteCsv(source, fileName);
             System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
