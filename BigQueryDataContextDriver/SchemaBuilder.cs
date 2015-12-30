@@ -339,7 +339,7 @@ namespace {namespaceName}
 
                                 return new ExplorerItem(y.TableInfo.table_id, ExplorerItemKind.QueryableObject, ExplorerIcon.Table)
                                 {
-                                    DragText = $"From<{className}>()",
+                                    DragText = $"From<LINQPad.User.{y.TableInfo.dataset_id}.{className}>()",
                                     ToolTipText = y.TableInfo.ToFullTableName(),
                                 };
                             }).ToList()
@@ -352,7 +352,7 @@ namespace {namespaceName}
 
                         var item = new ExplorerItem(g.ShortTablePrefix, ExplorerItemKind.QueryableObject, ExplorerIcon.Schema)
                         {
-                            DragText = $"FromDateRange<{classNameCheck}>()",
+                            DragText = $"FromDateRange<LINQPad.User.{x.TableInfo.dataset_id}.{classNameCheck}>()",
                             ToolTipText = x.TableInfo.ToFullTableName(),
                             Children = propertyList
                         };
@@ -369,7 +369,7 @@ namespace {namespaceName}
 
                         var item = new ExplorerItem(x.TableInfo.table_id, ExplorerItemKind.QueryableObject, ExplorerIcon.View)
                         {
-                            DragText = $"From<{className}>()",
+                            DragText = $"From<LINQPad.User.{x.TableInfo.dataset_id}.{className}>()",
                             ToolTipText = x.TableInfo.ToFullTableName(),
                             Children = BuildColumnExplorerItems(x.Fields)
                         };
@@ -386,7 +386,7 @@ namespace {namespaceName}
 
                         var item = new ExplorerItem(x.TableInfo.table_id, ExplorerItemKind.QueryableObject, ExplorerIcon.Table)
                         {
-                            DragText = $"From<{className}>()",
+                            DragText = $"From<LINQPad.User.{x.TableInfo.dataset_id}.{className}>()",
                             ToolTipText = x.TableInfo.ToFullTableName(),
                             Children = BuildColumnExplorerItems(x.Fields)
                         };
